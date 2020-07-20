@@ -232,19 +232,27 @@ WHERE IsIdentity = 0 AND ColumnName = 'sn'
 ORDER BY TableName, ColumnIndex
 ```
 ## CTE遞迴
-### 列出親子節點表的節點下所有節點
+### 列出樹狀節點表的節點下所有節點(由上而下)
 ``` sql
 WITH TEMP AS (
-	SELECT Id, Name , Pid, Id as [Index]
+	SELECT
+            Id,
+            Name,
+            Pid,
+            Id AS [Index]
 	FROM [Node]
 	UNION ALL
-	SELECT n.Id,n.Name,n.Pid,t.[Index]
-	FROM [Node] n
-	INNER JOIN TEMP t ON n.Pid = t.Id
+	SELECT
+            [Node].Id,
+            [Node].Name,
+            [Node].Pid,
+            [TEMP].[Index]
+	FROM [Node]
+	INNER JOIN TEMP ON [Node].Pid = [TEMP].Id
 )
 SELECT * FROM TEMP
 ```
-### 原表
+#### 原表
 | Id | Name  | Pid  |
 |----|-------|------|
 | 1  | A     | NULL |
@@ -258,7 +266,7 @@ SELECT * FROM TEMP
 | 9  | B-A   | 8    |
 | 10 | B-B   | 8    |
 
-### 結果
+#### 結果
 
 | Id | Name  | Pid  | Index |
 |----|-------|------|-------|
@@ -284,3 +292,23 @@ SELECT * FROM TEMP
 | 7  | A-B-B | 3    | 1     |
 | 4  | A-A-A | 2    | 1     |
 | 5  | A-A-B | 2    | 1     |
+### 列出樹狀節點表的節點上所有節點(由下而上)
+``` sql
+WITH TEMP AS (
+	SELECT
+            Id,
+            Name,
+            Pid,
+            Id AS [Index]
+	FROM [Node]
+	UNION ALL
+	SELECT
+            [Node].Id,
+            [Node].Name,
+            [Node].Pid,
+            [TEMP].[Index]
+	FROM [Node]
+	INNER JOIN TEMP ON [Node].Id = [TEMP].Pid
+)
+SELECT * FROM TEMP
+```
